@@ -1,6 +1,8 @@
 import serial
 import time
 import struct
+import create # Nice library I found with all the Create code you could want
+              # currently only using it for sensor code
 
 connection = None
 velocity = 0
@@ -18,7 +20,8 @@ CLEAN = '135'
 DOCK = '143'
 BEEP = '140 3 1 64 16 141 3'
 RESET = '7'
-BUMPSENSOR = '148 1 7'
+BUMPSENSOR = '142 7'
+CHARGE = '142 21'
 
 def sendCommandASCII(command):
 	cmd = ""
@@ -46,7 +49,9 @@ def Connect():
 
 	# Hard coded for Nick S MacBook
 	# MUST be changed for PC/other computers
-	port = "/dev/tty.usbserial-DA017TKR"
+	# port = "/dev/tty.usbserial-DA017TKR"
+
+	port = "COM3"
 
 	try:
 		connection = serial.Serial(port, baudrate=115200, timeout=1)
@@ -89,14 +94,6 @@ def Rotate(d):
 	cmd = struct.pack(">Bhh", 145, vr, vl)
 	sendCommandRaw(cmd)
 
-# Get bumper data - returns true if bumper active
-# NOT WORKING
-def Bumper():
-	sendCommandASCII(BUMPSENSOR)
-	time.sleep(1)
-	print connection.inWaiting()
-	print connection.read(connection.inWaiting())
-
 # Drive in a square (approx. 1 ft x 1 ft)
 def Square():
 	DriveStraight(1, 1)
@@ -121,9 +118,14 @@ def Start():
 	time.sleep(0.5)
 	sendCommandASCII(PASSIVE)
 	time.sleep(2)
-	sendCommandASCII(FULL)
+	#sendCommandASCII(FULL)
 	time.sleep(1)
 
-Start()
-Bumper()
-connection.close()
+r = create.Create(3)
+
+d = r.sensors()
+
+print d[create.LEFT_BUMP]
+print d[create.RIGHT_BUMP]
+
+r.close()
